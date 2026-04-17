@@ -1,6 +1,7 @@
 package com.devdogstudio.kanban_api.controller;
 
 import com.devdogstudio.kanban_api.dto.request.LoginRequest;
+import com.devdogstudio.kanban_api.dto.request.RefreshTokenRequest;
 import com.devdogstudio.kanban_api.dto.request.RegisterRequest;
 import com.devdogstudio.kanban_api.dto.response.AuthResponse;
 import com.devdogstudio.kanban_api.service.AuthService;
@@ -27,5 +28,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody @Valid LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@RequestBody @Valid RefreshTokenRequest request) {
+        return ResponseEntity.ok(authService.refresh(request));
     }
 }
