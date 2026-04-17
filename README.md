@@ -1,97 +1,180 @@
 # Kanban API
 
-Este é um projeto de API para um sistema Kanban, desenvolvido com Spring Boot. A API permite gerenciar tarefas, colunas e usuários em um quadro Kanban.
+RESTful API for a Kanban SaaS system built with Java 21, Spring Boot 3, Spring Security (JWT), JPA and PostgreSQL. Clean architecture with multi-tenant data isolation.
 
-## Pré-requisitos
+## 🚀 Technologies
 
-Antes de começar, certifique-se de que você tem os seguintes softwares instalados:
+- **Java 21**
+- **Spring Boot 3.4.5**
+- **Spring Security** — JWT Authentication (Access + Refresh Token)
+- **Spring Data JPA** — Hibernate ORM
+- **PostgreSQL 16**
+- **Docker & Docker Compose**
+- **Lombok**
+- **Maven**
 
-- **Java 21**: Baixe e instale o JDK 21 do [site oficial da Oracle](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html) ou use uma distribuição como OpenJDK.
-- **Maven**: Instale o Apache Maven. Você pode baixar em [maven.apache.org](https://maven.apache.org/download.cgi). Alternativamente, use o wrapper Maven incluído no projeto (`mvnw` ou `mvnw.cmd`).
-- **Docker e Docker Compose**: Necessários para executar o banco de dados PostgreSQL. Baixe em [docker.com](https://www.docker.com/get-started).
+---
 
-## Instalação e Configuração
+## 📋 Features
 
-### 1. Clonar o Repositório
+- ✅ User registration and login with JWT
+- ✅ Access Token (15 min) + Refresh Token (7 days)
+- ✅ Multi-tenant data isolation (users only access their own data)
+- ✅ Board CRUD
+- ✅ Column CRUD with position ordering
+- ✅ Task CRUD with drag & drop support (move between columns)
+- ✅ Comments on tasks
+- ✅ Audit logging (created, updated, deleted)
+- ✅ Global exception handler with standardized error responses
+- ✅ Soft delete on all entities
+- ✅ Bean Validation on all requests
+- ✅ CORS configured for Angular frontend
 
-Clone este repositório para sua máquina local:
+---
+
+## 🏗️ Architecture
+
+```
+com.devdogstudio.kanban_api
+├── audit/          → Audit logging
+├── config/         → Security and CORS configuration
+├── controller/     → REST endpoints
+├── dto/
+│   ├── request/    → Request DTOs
+│   └── response/   → Response DTOs
+├── entity/         → JPA entities
+├── enums/          → Enumerators
+├── exception/      → Custom exceptions and global handler
+├── repository/     → JPA repositories
+├── security/       → JWT filter and service
+└── service/        → Business logic
+```
+
+---
+
+## ⚙️ Prerequisites
+
+- Java 21 ([Adoptium](https://adoptium.net))
+- Maven 3.9+
+- Docker & Docker Compose ([docker.com](https://www.docker.com/get-started))
+
+---
+
+## 🐳 Running the project
+
+### 1. Clone the repository
 
 ```bash
-git clone <URL_DO_REPOSITORIO>
+git clone https://github.com/marcofavero3/kanban-api.git
 cd kanban-api
 ```
 
-Substitua `<URL_DO_REPOSITORIO>` pela URL real do repositório (por exemplo, no GitHub ou GitLab).
-
-### 2. Configurar o Banco de Dados
-
-O projeto usa PostgreSQL como banco de dados. Use o Docker Compose para iniciar o banco de dados e o PgAdmin (ferramenta de administração do banco):
+### 2. Start the database
 
 ```bash
 docker-compose up -d
 ```
 
-Isso iniciará:
-- PostgreSQL na porta 5432
-- PgAdmin na porta 5050 (acesse via navegador em `http://localhost:5050` com email: `admin@kanban.com` e senha: `admin`)
+This starts:
+- **PostgreSQL** on port `5432`
+- **pgAdmin** on port `5050` → `http://localhost:5050`
+  - Email: `admin@kanban.com`
+  - Password: `admin`
 
-### 3. Executar a Aplicação
-
-Para executar a aplicação Spring Boot:
-
-- Usando Maven instalado:
-  ```bash
-  mvn spring-boot:run
-  ```
-
-- Ou usando o wrapper Maven (recomendado):
-  ```bash
-  ./mvnw spring-boot:run
-  ```
-  (No Windows: `mvnw.cmd spring-boot:run`)
-
-A aplicação será iniciada na porta 8080. Você pode acessar a API em `http://localhost:8080`.
-
-## Estrutura do Projeto
-
-- `src/main/java/com/devdogstudio/kanban_api/`: Código fonte da aplicação
-  - `controller/`: Controladores REST
-  - `entity/`: Entidades JPA
-  - `repository/`: Repositórios de dados
-  - `service/`: Lógica de negócio
-  - `security/`: Configurações de segurança
-  - `config/`: Outras configurações
-- `src/main/resources/`: Recursos estáticos e configurações
-- `src/test/`: Testes unitários e de integração
-
-## Configurações
-
-As configurações principais estão em `src/main/resources/application.properties`:
-
-- Banco de dados: PostgreSQL local
-- Porta do servidor: 8080
-- JPA: Hibernate com DDL auto-update
-
-## Testes
-
-Para executar os testes:
+### 3. Run the application
 
 ```bash
-mvn test
+./mvnw spring-boot:run
 ```
 
-Ou com wrapper:
+API available at: `http://localhost:8080`
 
-```bash
-./mvnw test
+---
+
+## 🔐 Authentication
+
+All endpoints except `/auth/**` require a Bearer token.
+
+```
+Authorization: Bearer <accessToken>
 ```
 
-## Documentação Adicional
+### Endpoints
 
-Para mais informações sobre Spring Boot e as tecnologias usadas, consulte:
+| Method | URL | Description |
+|--------|-----|-------------|
+| POST | `/auth/register` | Register new user |
+| POST | `/auth/login` | Login and get tokens |
+| POST | `/auth/refresh` | Refresh access token |
 
-- [Documentação do Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/html/)
-- [Spring Data JPA](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/)
-- [Spring Security](https://docs.spring.io/spring-security/reference/)
+---
 
-Se você tiver dúvidas ou problemas, entre em contato com o desenvolvedor principal.
+## 📡 API Endpoints
+
+### Boards
+| Method | URL | Description |
+|--------|-----|-------------|
+| GET | `/boards` | List all boards |
+| GET | `/boards/{id}` | Get board by ID |
+| POST | `/boards` | Create board |
+| PUT | `/boards/{id}` | Update board |
+| DELETE | `/boards/{id}` | Delete board |
+
+### Columns
+| Method | URL | Description |
+|--------|-----|-------------|
+| GET | `/boards/{boardId}/columns` | List columns |
+| GET | `/boards/{boardId}/columns/{id}` | Get column |
+| POST | `/boards/{boardId}/columns` | Create column |
+| PUT | `/boards/{boardId}/columns/{id}` | Update column |
+| DELETE | `/boards/{boardId}/columns/{id}` | Delete column |
+
+### Tasks
+| Method | URL | Description |
+|--------|-----|-------------|
+| GET | `/boards/{boardId}/columns/{columnId}/tasks` | List tasks |
+| GET | `/boards/{boardId}/columns/{columnId}/tasks/{id}` | Get task |
+| POST | `/boards/{boardId}/columns/{columnId}/tasks` | Create task |
+| PUT | `/boards/{boardId}/columns/{columnId}/tasks/{id}` | Update task |
+| PATCH | `/boards/{boardId}/tasks/{id}/move` | Move task between columns |
+| DELETE | `/boards/{boardId}/columns/{columnId}/tasks/{id}` | Delete task |
+
+### Comments
+| Method | URL | Description |
+|--------|-----|-------------|
+| GET | `/tasks/{taskId}/comments` | List comments |
+| POST | `/tasks/{taskId}/comments` | Add comment |
+| DELETE | `/tasks/{taskId}/comments/{id}` | Delete comment |
+
+### Audit
+| Method | URL | Description |
+|--------|-----|-------------|
+| GET | `/audit` | List audit logs |
+
+---
+
+## 🛡️ Security
+
+- Passwords hashed with **BCrypt**
+- JWT signed with **HMAC-SHA512**
+- Ownership validation on every request
+- Soft delete — no data is physically removed
+- `@SQLRestriction` automatically filters deleted records
+
+---
+
+## 🌱 Git Flow
+
+```
+main       → stable, production-ready code
+develop    → integration branch
+feature/x  → individual features
+```
+
+---
+
+## 👨‍💻 Developer
+
+**Marco Antonio Favero Junior**
+Full-Stack Developer — Java Spring Boot & Angular
+[Dev Dog Studio](https://devdogstudio.com.br)
