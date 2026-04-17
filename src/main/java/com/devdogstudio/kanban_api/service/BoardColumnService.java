@@ -5,6 +5,7 @@ import com.devdogstudio.kanban_api.dto.response.BoardColumnResponse;
 import com.devdogstudio.kanban_api.entity.Board;
 import com.devdogstudio.kanban_api.entity.BoardColumn;
 import com.devdogstudio.kanban_api.entity.User;
+import com.devdogstudio.kanban_api.exception.ResourceNotFoundException;
 import com.devdogstudio.kanban_api.repository.BoardColumnRepository;
 import com.devdogstudio.kanban_api.repository.BoardRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,7 @@ public class BoardColumnService {
     public BoardColumnResponse findById(UUID boardId, UUID columnId) {
         getBoard(boardId);
         BoardColumn column = boardColumnRepository.findByIdAndBoardId(columnId, boardId)
-                .orElseThrow(() -> new RuntimeException("Coluna não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Coluna não encontrada"));
         return toResponse(column);
     }
 
@@ -49,7 +50,7 @@ public class BoardColumnService {
     public BoardColumnResponse update(UUID boardId, UUID columnId, BoardColumnRequest request) {
         getBoard(boardId);
         BoardColumn column = boardColumnRepository.findByIdAndBoardId(columnId, boardId)
-                .orElseThrow(() -> new RuntimeException("Coluna não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Coluna não encontrada"));
         column.setTitle(request.getTitle());
         column.setPosition(request.getPosition());
         return toResponse(boardColumnRepository.save(column));
@@ -58,7 +59,7 @@ public class BoardColumnService {
     public void delete(UUID boardId, UUID columnId) {
         getBoard(boardId);
         BoardColumn column = boardColumnRepository.findByIdAndBoardId(columnId, boardId)
-                .orElseThrow(() -> new RuntimeException("Coluna não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Coluna não encontrada"));
         column.softDelete();
         boardColumnRepository.save(column);
     }
@@ -66,7 +67,7 @@ public class BoardColumnService {
     private Board getBoard(UUID boardId) {
         User user = getAuthenticatedUser();
         return boardRepository.findByIdAndUserId(boardId, user.getId())
-                .orElseThrow(() -> new RuntimeException("Board não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Board não encontrado"));
     }
 
     private User getAuthenticatedUser() {
