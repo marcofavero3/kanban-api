@@ -4,6 +4,8 @@ import com.devdogstudio.kanban_api.dto.request.LoginRequest;
 import com.devdogstudio.kanban_api.dto.request.RegisterRequest;
 import com.devdogstudio.kanban_api.dto.response.AuthResponse;
 import com.devdogstudio.kanban_api.entity.User;
+import com.devdogstudio.kanban_api.exception.BusinessException;
+import com.devdogstudio.kanban_api.exception.ResourceNotFoundException;
 import com.devdogstudio.kanban_api.repository.UserRepository;
 import com.devdogstudio.kanban_api.security.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +25,7 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email já cadastrado");
+            throw new BusinessException("Email já cadastrado");
         }
 
         User user = User.builder()
@@ -54,7 +56,7 @@ public class AuthService {
         );
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
         String accessToken = jwtService.generateAcessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
