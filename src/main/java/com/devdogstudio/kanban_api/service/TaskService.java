@@ -1,11 +1,13 @@
 package com.devdogstudio.kanban_api.service;
 
+import com.devdogstudio.kanban_api.audit.AuditService;
 import com.devdogstudio.kanban_api.dto.request.MoveTaskRequest;
 import com.devdogstudio.kanban_api.dto.request.TaskRequest;
 import com.devdogstudio.kanban_api.dto.response.TaskResponse;
 import com.devdogstudio.kanban_api.entity.BoardColumn;
 import com.devdogstudio.kanban_api.entity.Task;
 import com.devdogstudio.kanban_api.entity.User;
+import com.devdogstudio.kanban_api.enums.AuditAction;
 import com.devdogstudio.kanban_api.exception.ResourceNotFoundException;
 import com.devdogstudio.kanban_api.repository.BoardColumnRepository;
 import com.devdogstudio.kanban_api.repository.BoardRepository;
@@ -24,6 +26,7 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final BoardColumnRepository boardColumnRepository;
     private final BoardRepository boardRepository;
+    private final AuditService auditService;
 
     public List<TaskResponse> findAll(UUID boardId, UUID columnId) {
         getColumn(boardId, columnId);
@@ -49,7 +52,9 @@ public class TaskService {
                 .position(request.getPosition() != null ? request.getPosition() : 0)
                 .column(column)
                 .build();
-        return toResponse(taskRepository.save(task));
+        Task saved = taskRepository.save(task);
+        auditService.log(AuditAction.CREATED, "TASK", saved.getId());
+        return toResponse(saved);
     }
 
     public TaskResponse update(UUID boardId, UUID columnId, UUID taskId, TaskRequest request) {
@@ -62,7 +67,9 @@ public class TaskService {
         if (request.getPosition() != null) {
             task.setPosition(request.getPosition());
         }
-        return toResponse(taskRepository.save(task));
+        Task saved = taskRepository.save(task);
+        auditService.log(AuditAction.UPDATED, "TASK", saved.getId());
+        return toResponse(saved);
     }
 
     public TaskResponse move(UUID boardId, UUID taskId, MoveTaskRequest request) {
@@ -79,7 +86,9 @@ public class TaskService {
 
         task.setColumn(targetColumn);
         task.setPosition(request.getPosition());
-        return toResponse(taskRepository.save(task));
+        Task saved = taskRepository.save(task);
+        auditService.log(AuditAction.UPDATED, "TASK", saved.getId());
+        return toResponse(saved);
     }
 
     public void delete(UUID boardId, UUID columnId, UUID taskId) {
@@ -88,6 +97,7 @@ public class TaskService {
                 .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada"));
         task.softDelete();
         taskRepository.save(task);
+        auditService.log(AuditAction.DELETED, "TASK", task.getId());
     }
 
     private BoardColumn getColumn(UUID boardId, UUID columnId) {
@@ -95,7 +105,7 @@ public class TaskService {
         boardRepository.findByIdAndUserId(boardId, user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Board não encontrado"));
         return boardColumnRepository.findByIdAndBoardId(columnId, boardId)
-                .orElseThrow(() -> new ResourceNotFoundException("Coluna destino não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Coluna não encontrada"));
     }
 
     private User getAuthenticatedUser() {

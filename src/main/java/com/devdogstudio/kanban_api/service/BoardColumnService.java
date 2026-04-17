@@ -1,10 +1,12 @@
 package com.devdogstudio.kanban_api.service;
 
+import com.devdogstudio.kanban_api.audit.AuditService;
 import com.devdogstudio.kanban_api.dto.request.BoardColumnRequest;
 import com.devdogstudio.kanban_api.dto.response.BoardColumnResponse;
 import com.devdogstudio.kanban_api.entity.Board;
 import com.devdogstudio.kanban_api.entity.BoardColumn;
 import com.devdogstudio.kanban_api.entity.User;
+import com.devdogstudio.kanban_api.enums.AuditAction;
 import com.devdogstudio.kanban_api.exception.ResourceNotFoundException;
 import com.devdogstudio.kanban_api.repository.BoardColumnRepository;
 import com.devdogstudio.kanban_api.repository.BoardRepository;
@@ -21,6 +23,7 @@ public class BoardColumnService {
 
     private final BoardColumnRepository boardColumnRepository;
     private final BoardRepository boardRepository;
+    private final AuditService auditService;
 
     public List<BoardColumnResponse> findAll(UUID boardId) {
         getBoard(boardId);
@@ -44,7 +47,9 @@ public class BoardColumnService {
                 .position(request.getPosition())
                 .board(board)
                 .build();
-        return toResponse(boardColumnRepository.save(column));
+        BoardColumn saved = boardColumnRepository.save(column);
+        auditService.log(AuditAction.CREATED, "BOARD_COLUMN", saved.getId());
+        return toResponse(saved);
     }
 
     public BoardColumnResponse update(UUID boardId, UUID columnId, BoardColumnRequest request) {
@@ -53,7 +58,9 @@ public class BoardColumnService {
                 .orElseThrow(() -> new ResourceNotFoundException("Coluna não encontrada"));
         column.setTitle(request.getTitle());
         column.setPosition(request.getPosition());
-        return toResponse(boardColumnRepository.save(column));
+        BoardColumn saved = boardColumnRepository.save(column);
+        auditService.log(AuditAction.UPDATED, "BOARD_COLUMN", saved.getId());
+        return toResponse(saved);
     }
 
     public void delete(UUID boardId, UUID columnId) {
@@ -62,6 +69,7 @@ public class BoardColumnService {
                 .orElseThrow(() -> new ResourceNotFoundException("Coluna não encontrada"));
         column.softDelete();
         boardColumnRepository.save(column);
+        auditService.log(AuditAction.DELETED, "BOARD_COLUMN", column.getId());
     }
 
     private Board getBoard(UUID boardId) {
