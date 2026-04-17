@@ -1,9 +1,11 @@
 package com.devdogstudio.kanban_api.service;
 
+import com.devdogstudio.kanban_api.audit.AuditService;
 import com.devdogstudio.kanban_api.dto.request.BoardRequest;
 import com.devdogstudio.kanban_api.dto.response.BoardResponse;
 import com.devdogstudio.kanban_api.entity.Board;
 import com.devdogstudio.kanban_api.entity.User;
+import com.devdogstudio.kanban_api.enums.AuditAction;
 import com.devdogstudio.kanban_api.exception.ResourceNotFoundException;
 import com.devdogstudio.kanban_api.repository.BoardRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import java.util.UUID;
 public class BoardService {
 
     private final BoardRepository boardRepository;
+    private final AuditService auditService;
 
     public List<BoardResponse> findAll() {
         User user = getAuthenticatedUser();
@@ -41,7 +44,9 @@ public class BoardService {
                 .description(request.getDescription())
                 .user(user)
                 .build();
-        return toResponse(boardRepository.save(board));
+        Board saved = boardRepository.save(board);
+        auditService.log(AuditAction.CREATED, "BOARD", saved.getId());
+        return toResponse(saved);
     }
 
     public BoardResponse update(UUID id, BoardRequest request) {
@@ -50,7 +55,9 @@ public class BoardService {
                 .orElseThrow(() -> new ResourceNotFoundException("Board não encontrado"));
         board.setTitle(request.getTitle());
         board.setDescription(request.getDescription());
-        return toResponse(boardRepository.save(board));
+        Board saved = boardRepository.save(board);
+        auditService.log(AuditAction.UPDATED, "BOARD", saved.getId());
+        return toResponse(saved);
     }
 
     public void delete(UUID id) {
@@ -59,6 +66,7 @@ public class BoardService {
                 .orElseThrow(() -> new ResourceNotFoundException("Board não encontrado"));
         board.softDelete();
         boardRepository.save(board);
+        auditService.log(AuditAction.DELETED, "BOARD", board.getId());
     }
 
     private User getAuthenticatedUser() {
